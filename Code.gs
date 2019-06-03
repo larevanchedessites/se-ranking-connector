@@ -5,7 +5,7 @@ function getAuthType() {
   return response;
 }
 
-function getConfig(request) {
+function getConfig(request) {
   var config = {
     configParams: [
       {
@@ -54,15 +54,15 @@ var fixedSchema = [
     }
   },
   {
-    name: 'SiteTitle',
-    label: 'Site title',
-    description: 'Site title',
-    dataType: 'STRING',
+    name: 'SiteEngineId',
+    label: 'Site Engine ID',
+    description: 'Site Engine ID',
+    dataType: 'NUMBER',
     semantics: {
-      conceptType: 'DIMENSION',
-      semanticType: 'TEXT',
-      semanticGroup: 'TEXT',
-    },
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
   },
   {
     name: 'Keyword',
@@ -107,7 +107,7 @@ function isAdminUser() {
   return true;
 }
 
-function getData(request) {
+function getData(request) {
   // Prepare the schema for the fields requested.
   var dataSchema = [];
 
@@ -122,25 +122,27 @@ function getData(request) {
 
   // Craft URL
   var url = [
-    'https://api2.seranking.com/?method=stat&siteid=',
-    request.configParams.siteid,
-    '&token=',
-    request.configParams.token,
-    '&dateStart=',
-    request.configParams.datestart,
-    '&dateEnd=',
-    request.configParams.dateend
-  ];
+    'https://api4.seranking.com/sites/',request.configParams.siteid,'/positions?',
+    'date_from=', request.configParams.datestart,
+    '&date_to=', request.configParams.dateend
+  ].join('');
+  var token = ['Token ', request.configParams.token].join('');
+  var options = {
+    'method': 'GET',
+    'headers': {
+      'Authorization': token
+    }
+  };
 
   // Fetch the data.
-  var response = JSON.parse(UrlFetchApp.fetch(url.join('')));
+  var response = JSON.parse(UrlFetchApp.fetch(url, options));
   var keywords = response[0].keywords;
 
   // Prepare the tabular data.
   var data = [];
-  keywords.forEach(function(keyword) {
+  keywords.forEach(function(keyword) {
     // Provide values in the order defined by the schema.
-    keyword.positions.forEach(function(position) {
+    keyword.positions.forEach(function(position) {
 
       var values = [];
       dataSchema.forEach(function(field) {
@@ -151,8 +153,8 @@ function getData(request) {
           case 'Keyword':
             values.push(keyword.name);
             break;
-          case 'SiteTitle':
-            values.push(response[0].business_name);
+          case 'SiteEngineId':
+            values.push(response[0].site_engine_id);
             break;
           case 'Position':
             values.push(position.pos);
