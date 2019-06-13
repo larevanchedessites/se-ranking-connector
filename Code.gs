@@ -87,6 +87,61 @@ var fixedSchema = [
     }
   },
   {
+    name: 'Change',
+    label: 'Change',
+    description: 'Change',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
+    name: 'Price',
+    label: 'Price',
+    description: 'Price',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
+    name: 'IsMap',
+    label: 'IsMap',
+    description: 'IsMap',
+    dataType: 'BOOLEAN',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'BOOLEAN',
+      semanticGroup: 'BOOLEAN'
+    }
+  },
+  {
+    name: 'MapPosition',
+    label: 'MapPosition',
+    description: 'MapPosition',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
+    name: 'PaidPosition',
+    label: 'PaidPosition',
+    description: 'PaidPosition',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
     name: 'Volume',
     label: 'Volume',
     description: 'Volume',
@@ -96,7 +151,62 @@ var fixedSchema = [
       semanticType: 'NUMBER',
       semanticGroup: 'NUMERIC'
     }
-  }
+  },
+  {
+    name: 'Competition',
+    label: 'Competition',
+    description: 'Competition',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
+    name: 'SuggestedBid',
+    label: 'SuggestedBid',
+    description: 'SuggestedBid',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
+    name: 'KeywordEfficiencyIndex',
+    label: 'KeywordEfficiencyIndex',
+    description: 'KeywordEfficiencyIndex',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
+    name: 'Results',
+    label: 'Results',
+    description: 'Results',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
+  {
+    name: 'TotalSum',
+    label: 'TotalSum',
+    description: 'TotalSum',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC',
+      semanticType: 'NUMBER',
+      semanticGroup: 'NUMERIC'
+    }
+  },
 ];
 
 function getSchema(request) {
@@ -124,7 +234,9 @@ function getData(request) {
   var url = [
     'https://api4.seranking.com/sites/',request.configParams.siteid,'/positions?',
     'date_from=', request.configParams.datestart,
-    '&date_to=', request.configParams.dateend
+    '&date_to=', request.configParams.dateend,
+    '&with_landing_pages=1',
+    '&with_serp_features=1'
   ].join('');
   var token = ['Token ', request.configParams.token].join('');
   var options = {
@@ -136,41 +248,71 @@ function getData(request) {
 
   // Fetch the data.
   var response = JSON.parse(UrlFetchApp.fetch(url, options));
-  var keywords = response[0].keywords;
 
   // Prepare the tabular data.
   var data = [];
-  keywords.forEach(function(keyword) {
-    // Provide values in the order defined by the schema.
-    keyword.positions.forEach(function(position) {
-
-      var values = [];
-      dataSchema.forEach(function(field) {
-        switch(field.name) {
-          case 'Date':
-            values.push(position.date.replace('-', '').replace('-', ''));
-            break;
-          case 'Keyword':
-            values.push(keyword.name);
-            break;
-          case 'SiteEngineId':
-            values.push(response[0].site_engine_id);
-            break;
-          case 'Position':
-            values.push(position.pos);
-            break;
-          case 'Volume':
-            values.push(keyword.volume);
-            break;
-          default:
-            values.push('');
-        }
+  response.forEach(function(site) {
+    var keywords = site.keywords;
+    keywords.forEach(function(keyword) {
+      // Provide values in the order defined by the schema.
+      keyword.positions.forEach(function(position) {
+        var values = [];
+        dataSchema.forEach(function(field) {
+          switch(field.name) {
+            case 'SiteEngineId':
+              values.push(site.site_engine_id);
+              break;
+            case 'Volume':
+              values.push(keyword.volume);
+              break;
+            case 'Keyword':
+              values.push(keyword.name);
+              break;
+            case 'Competition':
+              values.push(keyword.competition);
+              break;
+            case 'SuggestedBid':
+              values.push(keyword.suggested_bid);
+              break;
+            case 'KeywordEfficiencyIndex':
+              values.push(keyword.kei);
+              break;
+            case 'Results':
+              values.push(keyword.results);
+              break;
+            case 'TotalSum':
+              values.push(keyword.total_sum);
+              break;
+            case 'Date':
+              values.push(position.date.replace('-', '').replace('-', ''));
+              break;
+            case 'Position':
+              values.push(position.pos);
+              break;
+            case 'Change':
+              values.push(position.change);
+              break;
+            case 'Price':
+              values.push(position.price);
+              break;
+            case 'IsMap':
+              values.push(position.is_map?true:false);
+              break;
+            case 'MapPosition':
+              values.push(position.map_position);
+              break;
+            case 'PaidPosition':
+              values.push(position.paid_position);
+              break;
+            default:
+              values.push('');
+          }
+        });
+  
+        data.push({
+          values: values
+        });
       });
-
-      data.push({
-        values: values
-      });
-
     });
   });
 
